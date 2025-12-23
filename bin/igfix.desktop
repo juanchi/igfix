@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=IG Fix (Instagram Ads)
+Comment=Normalize MP4 for Instagram Reels Ads
+Icon=video
+Exec=konsole --noclose -e bash -lc 'igfix "%f"'
+Terminal=false
+MimeType=video/mp4;
+Categories=Video;Utility;

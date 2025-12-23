@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ $# -lt 1 ]]; then
+  echo "Usage: igfix <input.mp4> [output.mp4]"
+  exit 1
+fi
+
+IN="$1"
+if [[ ! -f "$IN" ]]; then
+  echo "Error: file not found: $IN"
+  exit 1
+fi
+
+OUT="${2:-${IN%.*}_IG.mp4}"
+
+if ffprobe -v error -select_streams a:0 -show_entries stream=codec_type -of csv=p=0 "$IN" | grep -qi "audio"; then
+  AUDIO_MAP=(-map 0:a0)
+  AUDIO_ENC=(-c:a aac -b:a 192k -ar 48000)
+else
+  AUDIO_MAP=()
+  AUDIO_ENC=()
+fi
+
+ffmpeg -hide_banner -y -i "$IN" \
+  -map 0:v:0 "${AUDIO_MAP[@]}" \
+  -c:v libx264 -profile:v baseline -level 3.1 \
+  -pix_fmt yuv420p \
+  -r 30 -g 30 \
+  -b:v 9000k \
+  -x264-params "bframes=0:ref=1" \
+  -movflags +faststart \
+  -color_primaries bt709 -color_trc bt709 -colorspace bt709 \
+  "${AUDIO_ENC[@]}" \
+  "$OUT"
+
+echo "✅ Created: $OUT"
